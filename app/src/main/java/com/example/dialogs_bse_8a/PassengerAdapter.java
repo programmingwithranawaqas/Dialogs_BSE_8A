@@ -1,6 +1,7 @@
 package com.example.dialogs_bse_8a;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.provider.ContactsContract;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,6 +22,7 @@ public class PassengerAdapter extends RecyclerView.Adapter<PassengerAdapter.Pass
 
     Context context;
     ArrayList<Passenger> passengers;
+    String preferenceForDialog;
 
     public PassengerAdapter(Context c, ArrayList<Passenger> passengers)
     {
@@ -42,8 +44,19 @@ public class PassengerAdapter extends RecyclerView.Adapter<PassengerAdapter.Pass
         holder.tvName.setText(p.getName());
         holder.tvPhone.setText(p.getPhone());
         holder.ivDel.setOnClickListener((v)->{
-            DataClass.data.remove(position);
-            notifyItemRemoved(position);
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setTitle("Confirmation Message");
+            builder.setMessage("Are you sure?");
+            builder.setPositiveButton("Delete", (d, v1)->{
+                DataClass.data.remove(position);
+                notifyItemRemoved(position);
+            });
+            builder.setNegativeButton("No", (d, v1)->{
+
+            });
+
+            builder.create().show();
         });
         holder.ivEdit.setOnClickListener((v)->{
             editRecord(position);
@@ -79,8 +92,10 @@ public class PassengerAdapter extends RecyclerView.Adapter<PassengerAdapter.Pass
         Passenger p = DataClass.data.get(position);
         etName.setText(p.getName());
         etPhone.setText(p.getPhone());
+        preferenceForDialog = p.getPref();
+        btnAdd.setText("Update");
 
-        if(p.getPref().equals("bus"))
+        if(preferenceForDialog.equals("bus"))
         {
             ivPic.setImageResource(R.drawable.icon_bus);
         }
@@ -94,21 +109,21 @@ public class PassengerAdapter extends RecyclerView.Adapter<PassengerAdapter.Pass
             dialog.dismiss();
         });
 
-
-
         ivPic.setOnClickListener((v1)->{
             if(p.getPref().equals("bus"))
             {
                 ivPic.setImageResource(R.drawable.icon_train);
-
+                preferenceForDialog = "train";
             }
             else
             {
                 ivPic.setImageResource(R.drawable.icon_bus);
-
+                preferenceForDialog = "bus";
             }
 
         });
+
+
         btnAdd.setOnClickListener((v1)->{
             String name = etName.getText().toString().trim();
             String phone = etPhone.getText().toString().trim();
@@ -124,9 +139,12 @@ public class PassengerAdapter extends RecyclerView.Adapter<PassengerAdapter.Pass
                 return;
             }
 
-            DataClass.data.add(new Passenger(name, preferenceForDialog, phone));
-            adapter.notifyItemInserted(DataClass.data.size()-1);
-            Toast.makeText(this, "Data Inserted", Toast.LENGTH_SHORT).show();
+            p.setName(name);
+            p.setPhone(phone);
+            p.setPref(preferenceForDialog);
+
+            notifyItemChanged(position);
+            Toast.makeText(context, "Data Updated", Toast.LENGTH_SHORT).show();
             dialog.dismiss();
         });
     }
